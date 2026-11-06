@@ -1,0 +1,64 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch: # "Run workflow" button: test and deploy main by hand
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  # Every merge to main goes live, once the tests pass. Needs two repository
+  # secrets (docs/setup.md, "Deploy on merge"). Without them this job skips,
+  # so forks and fresh clones never fail here.
+  deploy:
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      # Repository variables, not secrets: where this copy lives and its clock.
+      TLDR_DOMAIN: ${{ vars.TLDR_DOMAIN }}
+      EDITION_TZ: ${{ vars.EDITION_TZ }}
+    steps:
+      - name: Check for Cloudflare secrets
+        id: secrets
+        run: |
+          if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            # Fail rather than deploy without a domain: that would leave the
+            # Worker unreachable. The live version keeps running.
+            if [ -z "$TLDR_DOMAIN" ]; then
+              echo "::error::Set the repository variable TLDR_DOMAIN (e.g. tldr.example.com). See docs/setup.md, 'Deploy on merge'."
+              exit 1
+            fi
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No Cloudflare secrets set, so nothing is deployed. See docs/setup.md, 'Deploy on merge'."
+          fi
+      - if: steps.secrets.outputs.ready == 'true'
+        uses: actions/checkout@v5
+      - if: steps.secrets.outputs.ready == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.secrets.outputs.ready == 'true'
+        run: npm ci
+      # Migrations first, so new code never runs against an old schema.
+      - if: steps.secrets.outputs.ready == 'true'
+        run: npx wrangler d1 migrations apply tldr --remote
+      - if: steps.secrets.outputs.ready == 'true'
+        run: npm run deploy

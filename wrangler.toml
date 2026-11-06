@@ -1,0 +1,63 @@
+# tldr: one Worker, one D1 database.
+# No account IDs live here. `wrangler deploy` finds or creates the D1
+# database by name, so the repo stays free of personal identifiers.
+name = "tldr"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+
+# The site is only reachable through Cloudflare Access on your custom domain.
+# workers.dev and preview URLs are not behind Access, so they stay off.
+# The domain isn't listed here, so this file stays the same for everyone:
+# `npm run deploy` (scripts/deploy.mjs) passes it from TLDR_DOMAIN.
+workers_dev = false
+preview_urls = false
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+# Every request, including the manifest and icons, goes through the
+# Worker's Access check first.
+run_worker_first = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tldr"
+migrations_dir = "migrations"
+
+# Every 3 hours (minute 7 to stay off the top of the hour): X bookmark sync,
+# GitHub stars and YouTube playlist sync,
+# the 30-day Morgue, the editor when an AI key is set (src/editor.ts), and
+# the missed-run email check (src/loop.ts).
+[triggers]
+crons = ["7 */3 * * *"]
+
+# The morning email. Needs Cloudflare Email Routing on the sender's domain,
+# with the reader's address verified as a destination (docs/setup.md,
+# section 8). No address is listed here, so the repo holds none.
+[[send_email]]
+name = "MAILER"
+
+# Plain settings, passed with --var by scripts/deploy.mjs (nothing secret):
+#   EDITION_TZ  your time zone for datelines, the email and the editor's hour,
+#               an IANA name like Europe/London (default UTC)
+#   SITE_URL    https://<TLDR_DOMAIN>, where the email's links point
+
+# Set with `wrangler secret put` (never commit these):
+#   ACCESS_TEAM_DOMAIN  e.g. yourteam.cloudflareaccess.com
+#   ACCESS_AUD          the Access application's Audience (AUD) tag
+#   ALLOWED_EMAIL       the one email allowed in
+#   X_CLIENT_ID         OAuth 2.0 client id of your X app
+#   X_CLIENT_SECRET     OAuth 2.0 client secret of your X app
+#   MCP_TOKEN           random token for the /mcp endpoint (openssl rand -hex 32)
+#   MAIL_FROM           sender for the morning email, e.g. tldr@yourdomain.example
+#   MAIL_TO             optional; defaults to ALLOWED_EMAIL
+#   GITHUB_USER         whose GitHub stars to read (optional source)
+#   GITHUB_TOKEN        optional; raises GitHub's rate limit
+#   YOUTUBE_API_KEY     YouTube Data API v3 key (optional source)
+#   YOUTUBE_PLAYLIST_ID the Unlisted playlist you save videos to
+# The editor in the Worker (mode B, optional; docs/setup.md section 7b). One of:
+#   ANTHROPIC_API_KEY   Claude API key
+#   OPENROUTER_API_KEY  OpenRouter key (with AI_MODEL)
+#   LLM_API_KEY         any OpenAI-compatible API (with LLM_BASE_URL, AI_MODEL)
+#   AI_MODEL            model id; defaults to claude-opus-5-5 for the Claude API
+#   EDITOR_HOUR         local hour the run may start, default 6

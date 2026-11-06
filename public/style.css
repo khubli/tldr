@@ -1,0 +1,324 @@
+/* The broadsheet: the Desk and its back pages.
+   Follows docs/design-brief.md. Square corners, rules not boxes, one spot red.
+   Newspaper type for reading (blackletter masthead, serif headlines and body);
+   a plain sans for everything you scan or tap (section bar, labels, buttons). */
+
+:root {
+  --paper: #F3EFE6;
+  --ink: #141310;
+  --rule: #8A857A;
+  --muted: #4A463F;
+  --red: #C2362B;
+  --masthead: "UnifrakturMaguntia", "Old English Text MT", serif;
+  --headline: "Source Serif 4", Georgia, serif;
+  --body: "Source Serif 4", Georgia, serif;
+  --ui: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", "Courier New", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #16140F;
+    --ink: #E9E3D6;
+    --rule: #6E695F;
+    --muted: #B3ADA0;
+    --red: #E0574B; /* the same sindoor, lifted to read on dark paper */
+  }
+}
+
+* { box-sizing: border-box; border-radius: 0; }
+
+html { background: var(--paper); color: var(--ink); -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0 auto;
+  max-width: 42rem;
+  padding: 1rem 1.1rem 3rem;
+  font-family: var(--body);
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 0.15em; }
+
+ol { list-style: none; margin: 0; padding: 0; }
+
+/* ── masthead ───────────────────────────────────────────── */
+
+.masthead { border-bottom: 4px double var(--ink); padding-bottom: 0.25rem; }
+
+.masthead-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.masthead h1 {
+  font-family: var(--masthead);
+  font-weight: 400;
+  font-size: clamp(2.2rem, 10vw, 3.4rem);
+  line-height: 1;
+  margin: 0;
+}
+
+.masthead h1 a { text-decoration: none; }
+
+/* The date stays in typewriter caps: the one dateline on the page. */
+.edition-line {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+/* ── the section bar ────────────────────────────────────── */
+
+.sections {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: var(--paper);
+  border-bottom: 1px solid var(--ink);
+}
+
+.sections a {
+  display: block;
+  padding: 0.75rem 0 0.6rem;
+  font-family: var(--ui);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+}
+
+.sections a[aria-current="page"] { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
+.sections .count { font-weight: 400; }
+
+/* ── labels and buttons: plain sans, normal case ────────── */
+
+.kicker,
+.dateline,
+.byline,
+.flash,
+.flash-row,
+button {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.kicker { display: block; margin: 0; font-weight: 600; }
+.spot { color: var(--red); }
+
+/* One line of sync status under the masthead. */
+.status {
+  margin: 0;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--rule);
+  color: var(--muted);
+  font-weight: 400;
+}
+.status-error { display: block; color: var(--ink); margin-top: 0.25rem; }
+
+/* ── buttons: rubber stamps ─────────────────────────────── */
+
+button {
+  min-height: 44px;
+  padding: 0 0.9rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--ink);
+  background: transparent;
+  border: 1.5px solid var(--ink);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:active { background: var(--ink); color: var(--paper); }
+
+button.link {
+  min-height: 0;
+  padding: 0.2rem 0;
+  border: 0;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+  color: inherit;
+  font-size: inherit;
+}
+button.link:active { background: transparent; color: var(--red); }
+
+textarea:focus,
+button:focus-visible,
+a:focus-visible,
+summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.stamps { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
+.stamps button { flex: 0 1 auto; }
+
+/* ── flashes ────────────────────────────────────────────── */
+
+.flash, .flash-row { margin: 0.75rem 0 0; }
+.flash-row { display: flex; align-items: center; gap: 1rem; }
+
+.stamp {
+  display: inline-block;
+  color: var(--red);
+  border: 2px solid var(--red);
+  padding: 0.15rem 0.5rem;
+  transform: rotate(-2deg);
+  font-family: var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* ── sections ───────────────────────────────────────────── */
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  padding: 1rem 0 0.4rem;
+  border-bottom: 1px solid var(--ink);
+}
+
+.section-head h2 {
+  font-family: var(--headline);
+  font-weight: 700;
+  font-size: 1.75rem;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.section-head .kicker { color: var(--muted); font-weight: 400; display: inline; }
+
+.kept h3 a, .cut h3 a { text-decoration: none; }
+
+h3 {
+  font-family: var(--headline);
+  font-weight: 600;
+  font-size: 1.15rem;
+  line-height: 1.2;
+  margin: 0.2rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+/* The Desk */
+.action { padding: 0.9rem 0 1rem; border-bottom: 1px solid var(--rule); }
+.action.lead h3 { font-size: 1.3rem; }
+.from { margin: 0.3rem 0 0; font-size: 0.9rem; line-height: 1.45; color: var(--muted); }
+
+.snoozed summary {
+  padding: 0.75rem 0;
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 400;
+  list-style: none;
+}
+.snoozed summary::-webkit-details-marker { display: none; }
+.snoozed summary::before { content: "+ "; }
+.snoozed[open] summary::before { content: "− "; }
+.asleep h3, .asleep .kicker { color: var(--muted); }
+
+/* Worth reading */
+.worth { margin-top: 0.5rem; border-top: 4px double var(--ink); }
+.worth .section-head { padding-top: 0.75rem; }
+.kept { padding: 0.85rem 0; border-bottom: 1px solid var(--rule); }
+.tldr { margin: 0.3rem 0 0; overflow-wrap: anywhere; }
+.why { margin: 0.25rem 0 0; font-size: 0.9rem; line-height: 1.45; color: var(--muted); }
+.why-label { font-family: var(--ui); font-weight: 600; font-size: 0.875rem; color: var(--ink); }
+.kept.lead .tldr::first-letter {
+  float: left;
+  font-family: var(--headline);
+  font-weight: 700;
+  font-size: 3.1em;
+  line-height: 0.85;
+  padding: 0.08em 0.08em 0 0;
+}
+
+.dateline, .byline { margin: 0.3rem 0 0; color: var(--muted); }
+.byline { margin-top: 0.35rem; }
+
+.jump { margin: 0; padding: 0.75rem 0; }
+.jump a { padding: 0.5rem 0; }
+
+.spiked-line {
+  margin-top: 1.25rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--rule);
+  color: var(--muted);
+  font-weight: 400;
+}
+.spiked-line a { display: block; padding: 0.25rem 0; }
+
+/* The Morgue */
+.note { margin: 0.75rem 0 0; font-size: 0.9rem; color: var(--muted); }
+.cut { padding: 0.85rem 0; border-bottom: 1px solid var(--rule); }
+.cut h3 { color: var(--muted); font-weight: 400; }
+.cut s { text-decoration-thickness: 1px; }
+.reason { color: var(--ink); }
+
+.empty { margin: 1rem 0; color: var(--muted); }
+
+/* Filing copy by hand, and the raw wire */
+.file-copy { padding: 1rem 0 1.25rem; border-bottom: 1px solid var(--rule); }
+.file-copy form { display: grid; gap: 0.5rem; }
+.file-copy button { justify-self: start; }
+
+textarea {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--rule);
+  padding: 0.6rem;
+  resize: vertical;
+}
+
+.wire > .kicker { padding: 1.25rem 0 0.4rem; border-bottom: 1px solid var(--ink); }
+.save { padding: 0.9rem 0; border-bottom: 1px solid var(--rule); }
+.body { margin: 0.35rem 0 0; overflow-wrap: anywhere; }
+
+/* ── desktop: two columns of type, Desk beside the reading ─ */
+
+@media (min-width: 60rem) {
+  body { max-width: 72rem; padding: 1.5rem 2rem 4rem; }
+  .masthead h1 { font-size: 4rem; }
+  .sections { justify-content: flex-start; gap: 2.5rem; }
+  .sections a { font-size: 1rem; }
+  .desk-page {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 2rem;
+    align-items: start;
+  }
+  .desk-page .worth {
+    margin-top: 0;
+    border-top: 0;
+    padding-left: 2rem;
+    border-left: 1px solid var(--rule);
+  }
+  .desk-page .worth .section-head { padding-top: 1rem; }
+  body > main:not(.desk-page) { max-width: 42rem; }
+}
+
+/* Sunday circulation box (slice 5) */
+.circulation { border: 1.5px solid var(--ink); padding: 0.6rem 0.75rem 0.7rem; margin: 0.75rem 0 0.5rem; text-align: center; }
+.circulation h2 { font-weight: 600; margin: 0 0 0.35rem; }
+.circulation .figures { display: flex; justify-content: space-around; gap: 0.5rem; font-family: var(--ui); font-size: 0.875rem; color: var(--muted); }
+.circulation .figure { display: block; font-family: var(--headline); font-size: 1.6rem; font-weight: 700; color: var(--ink); line-height: 1.1; }
+.circulation .slop { margin: 0.45rem 0 0; font-size: 1rem; }
+.circulation .slop strong { color: var(--red); }
+.aged { margin-top: 1.5rem; border-top: 4px double var(--ink); }
+.aged .section-head { padding-top: 0.75rem; }

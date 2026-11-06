@@ -1,0 +1,25 @@
+{
+  "name": "tldr",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A personal agent that reads your saved posts, spikes the slop, and prints a daily broadsheet.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local-upstream localhost:8787",
+    "deploy": "node scripts/deploy.mjs",
+    "db:migrate:local": "wrangler d1 migrations apply tldr --local",
+    "db:migrate:remote": "wrangler d1 migrations apply tldr --remote",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "profile:load": "node scripts/load-profile.mjs",
+    "demo:build": "node scripts/build-demo.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.5.1",
+    "@cloudflare/workers-types": "^5.20261104.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.12",
+    "wrangler": "^4.157.0"
+  }
+}

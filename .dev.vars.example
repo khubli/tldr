@@ -1,0 +1,9 @@
+# Copy to .dev.vars for `npm run dev`. .dev.vars is gitignored.
+# Lets requests to localhost skip the Access check. Never set this in production.
+ALLOW_LOCAL_DEV=true
+# Optional, to try X login locally: an X app with callback
+# http://localhost:8787/auth/x/callback
+# X_CLIENT_ID=
+# X_CLIENT_SECRET=
+# Optional, to try the MCP endpoint locally (32+ characters):
+# MCP_TOKEN=
